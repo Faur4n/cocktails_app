@@ -1,10 +1,19 @@
-import 'package:curl_logger_dio_interceptor/curl_logger_dio_interceptor.dart';
+import 'package:cocktails_app/data/models/drinks_response.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 final dioProvider = Provider((ref) {
   final dio = Dio();
-  dio.interceptors.add(CurlLoggerDioInterceptor(printOnSuccess: true));
+  dio.interceptors.add(PrettyDioLogger(
+      requestHeader: true,
+      requestBody: true,
+      responseBody: true,
+      responseHeader: false,
+      error: true,
+      compact: true,
+      maxWidth: 90
+  ));
   return dio;
 });
 
@@ -17,16 +26,18 @@ class CocktailsApi {
 
   final Reader _read;
 
-  Future<Response<Map<String, Object?>>> fetchCocktailsByLetter(
+  Future<DrinksResponse> fetchCocktailsByLetter(
     String letter, {
     CancelToken? cancelToken,
   }) async {
     final response = await _get('search.php',
-        cancelToken: cancelToken, queryParameters: {'f': 'a'});
-    return response;
+        cancelToken: cancelToken, queryParameters: {'f': 'a'}
+    );
+
+    return DrinksResponse.fromJson(response.data!);
   }
 
-  Future<Response<Map<String, Object?>>> _get(
+  Future<Response<Map<String, dynamic>>> _get(
     String path, {
     Map<String, Object?>? queryParameters,
     CancelToken? cancelToken,
