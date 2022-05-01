@@ -35,7 +35,7 @@ class _$AppRouter extends RootStackRouter {
     },
     HomeRoute.name: (routeData) {
       return MaterialPageX<dynamic>(
-          routeData: routeData, child: const HomePage());
+          routeData: routeData, child: const DrinksPage());
     },
     FavoritesRoute.name: (routeData) {
       return MaterialPageX<dynamic>(
@@ -112,7 +112,7 @@ class RandomRouter extends PageRouteInfo<void> {
 }
 
 /// generated route for
-/// [HomePage]
+/// [DrinksPage]
 class HomeRoute extends PageRouteInfo<void> {
   const HomeRoute() : super(HomeRoute.name, path: '');
 

@@ -1,5 +1,5 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:cocktails_app/pages/home_page.dart';
+import 'package:cocktails_app/pages/drinks/home_page.dart';
 import 'package:flutter/cupertino.dart';
 import '../pages/favorites_page.dart';
 import '../main.dart';
@@ -15,7 +15,7 @@ part 'app_router.gr.dart';
           path: 'home',
           name: 'HomeRouter',
           page: EmptyRouterPage,
-          children: [AutoRoute(path: '', page: HomePage)]
+          children: [AutoRoute(path: '', page: DrinksPage)]
       ),
       AutoRoute(
         path: 'favorites',
