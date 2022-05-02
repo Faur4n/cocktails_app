@@ -142,9 +142,7 @@ class DrinkSmallDescription extends ConsumerWidget {
               children: [
                 TextButton.icon(
                     onPressed: () async {
-                      if (!_drink.isFavorite) {
-                        await repo.setIsFavorite(_drink.id, true);
-                      }
+                      await repo.setIsFavorite(_drink.id, !_drink.isFavorite);
                     },
                     icon: !_drink.isFavorite
                         ? const Icon(Icons.favorite_outline)
