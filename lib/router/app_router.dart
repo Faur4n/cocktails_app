@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:cocktails_app/pages/drinks/home_page.dart';
+import 'package:cocktails_app/pages/drinks/drinks_page.dart';
 import 'package:flutter/cupertino.dart';
+import '../pages/drinks/drink_detail_page.dart';
 import '../pages/favorites_page.dart';
 import '../main.dart';
 import '../pages/random_page.dart';
@@ -15,7 +16,10 @@ part 'app_router.gr.dart';
           path: 'home',
           name: 'HomeRouter',
           page: EmptyRouterPage,
-          children: [AutoRoute(path: '', page: DrinksPage)]
+          children: [
+            AutoRoute(path: '', page: DrinksPage),
+            AutoRoute(path: ':drinkId', page: DrinksDetailsPage),
+          ]
       ),
       AutoRoute(
         path: 'favorites',

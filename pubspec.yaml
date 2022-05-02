@@ -16,13 +16,13 @@ dependencies:
   dio: ^4.0.6
   freezed_annotation: ^2.0.1
   json_annotation: ^4.5.0
-
-
+  sembast: ^3.2.0
+  path_provider: ^2.0.9
+  cached_network_image: ^3.2.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   auto_route_generator: ^3.2.3
   build_runner:
   flutter_lints: ^1.0.4

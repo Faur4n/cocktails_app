@@ -33,9 +33,18 @@ class _$AppRouter extends RootStackRouter {
       return MaterialPageX<dynamic>(
           routeData: routeData, child: const EmptyRouterPage());
     },
-    HomeRoute.name: (routeData) {
+    DrinksRoute.name: (routeData) {
       return MaterialPageX<dynamic>(
           routeData: routeData, child: const DrinksPage());
+    },
+    DrinksDetailsRoute.name: (routeData) {
+      final pathParams = routeData.inheritedPathParams;
+      final args = routeData.argsAs<DrinksDetailsRouteArgs>(
+          orElse: () =>
+              DrinksDetailsRouteArgs(drinkId: pathParams.getString('drinkId')));
+      return MaterialPageX<dynamic>(
+          routeData: routeData,
+          child: DrinksDetailsPage(key: args.key, drinkId: args.drinkId));
     },
     FavoritesRoute.name: (routeData) {
       return MaterialPageX<dynamic>(
@@ -54,7 +63,10 @@ class _$AppRouter extends RootStackRouter {
               path: 'home',
               parent: MainRoute.name,
               children: [
-                RouteConfig(HomeRoute.name, path: '', parent: HomeRouter.name)
+                RouteConfig(DrinksRoute.name,
+                    path: '', parent: HomeRouter.name),
+                RouteConfig(DrinksDetailsRoute.name,
+                    path: ':drinkId', parent: HomeRouter.name)
               ]),
           RouteConfig(FavoritesRouter.name,
               path: 'favorites',
@@ -113,10 +125,35 @@ class RandomRouter extends PageRouteInfo<void> {
 
 /// generated route for
 /// [DrinksPage]
-class HomeRoute extends PageRouteInfo<void> {
-  const HomeRoute() : super(HomeRoute.name, path: '');
+class DrinksRoute extends PageRouteInfo<void> {
+  const DrinksRoute() : super(DrinksRoute.name, path: '');
 
-  static const String name = 'HomeRoute';
+  static const String name = 'DrinksRoute';
+}
+
+/// generated route for
+/// [DrinksDetailsPage]
+class DrinksDetailsRoute extends PageRouteInfo<DrinksDetailsRouteArgs> {
+  DrinksDetailsRoute({Key? key, required String drinkId})
+      : super(DrinksDetailsRoute.name,
+            path: ':drinkId',
+            args: DrinksDetailsRouteArgs(key: key, drinkId: drinkId),
+            rawPathParams: {'drinkId': drinkId});
+
+  static const String name = 'DrinksDetailsRoute';
+}
+
+class DrinksDetailsRouteArgs {
+  const DrinksDetailsRouteArgs({this.key, required this.drinkId});
+
+  final Key? key;
+
+  final String drinkId;
+
+  @override
+  String toString() {
+    return 'DrinksDetailsRouteArgs{key: $key, drinkId: $drinkId}';
+  }
 }
 
 /// generated route for

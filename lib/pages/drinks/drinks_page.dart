@@ -1,19 +1,29 @@
-import 'package:cocktails_app/data/cocktails_api.dart';
+import 'package:auto_route/auto_route.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cocktails_app/data/local/database.dart';
+import 'package:cocktails_app/data/network/cocktails_api.dart';
+import 'package:cocktails_app/router/app_router.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/models/drinks_response.dart';
+import '../../data/models/drink.dart';
 
-final drinksByLetter = FutureProvider.autoDispose
-    .family<DrinksResponse, String>((ref, letter) async {
-  final cancelToken = CancelToken();
-  ref.onDispose(cancelToken.cancel);
-
-  final api = ref.watch(apiProvider);
-  final response =
-      await api.fetchCocktailsByLetter('a', cancelToken: cancelToken);
-  ref.keepAlive();
-  return response;
+final drinksByLetter =
+    StreamProvider.autoDispose.family<List<Drink>, String>((ref, letter) {
+  final repo = ref.watch(drinkRepositoryProvider);
+  try {
+    final cancelToken = CancelToken();
+    ref.onDispose(cancelToken.cancel);
+    final api = ref.watch(apiProvider);
+    final response = api.fetchCocktailsByLetter('a', cancelToken: cancelToken);
+    response.then((value) => repo.insertAllDrinks(value.drinks));
+  } catch (e) {
+    if (kDebugMode) {
+      print(e);
+    }
+  }
+  return repo.getAllDrinks();
 });
 
 class DrinksPage extends ConsumerWidget {
@@ -22,15 +32,24 @@ class DrinksPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final data = ref.watch(drinksByLetter('a'));
-    return Container(
+    return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text('Drinks'),
+        leading: const AutoBackButton(),
+      ),
+      body: Container(
         child: data.when(
-            data: (data) {
-              return DrinksList(data.drinks);
-            },
-            error: (err, stack) {
-              return Text('Error $err');
-            },
-            loading: () => const Center(child: CircularProgressIndicator())));
+          data: (data) {
+            return DrinksList(data);
+          },
+          error: (err, stack) {
+            return Text('Error $err');
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+        ),
+      ),
+    );
   }
 }
 
@@ -57,24 +76,32 @@ class DrinkCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CardWithSideImage(
-      image: Image.network(
-        _drink.thumb,
-        width: 150,
-        fit: BoxFit.cover,
+    return GestureDetector(
+      onTap: () => context.router.push(DrinksDetailsRoute(drinkId: _drink.id)),
+      child: CardWithSideImage(
+        image: CachedNetworkImage(
+          imageUrl: _drink.thumb,
+          width: 150,
+          fit: BoxFit.cover,
+          placeholder: (context, url) =>
+              const Center(child: CircularProgressIndicator()),
+          errorWidget: (context, url, error) => const Icon(Icons.error),
+        ),
+        content: DrinkSmallDescription(_drink),
       ),
-      content: DrinkSmallDescription(_drink),
     );
   }
 }
 
-class DrinkSmallDescription extends StatelessWidget {
+class DrinkSmallDescription extends ConsumerWidget {
   final Drink _drink;
 
   const DrinkSmallDescription(this._drink, {Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final repo = ref.watch(drinkRepositoryProvider);
+
     return Padding(
       padding: const EdgeInsets.only(top: 8.0),
       child: Column(
@@ -108,13 +135,25 @@ class DrinkSmallDescription extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(color: Colors.black.withOpacity(0.6))),
           ),
-          ButtonBar(
-            children: [
-              TextButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.favorite),
-                  label: const Text('В избранное'))
-            ],
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 500),
+            child: ButtonBar(
+              key: ValueKey(_drink.isFavorite),
+              children: [
+                TextButton.icon(
+                    onPressed: () async {
+                      if (!_drink.isFavorite) {
+                        await repo.setIsFavorite(_drink.id, true);
+                      }
+                    },
+                    icon: !_drink.isFavorite
+                        ? const Icon(Icons.favorite_outline)
+                        : const Icon(Icons.favorite),
+                    label: !_drink.isFavorite
+                        ? const Text('В избранное')
+                        : const Text('Сохранено'))
+              ],
+            ),
           ),
         ],
       ),
@@ -123,7 +162,7 @@ class DrinkSmallDescription extends StatelessWidget {
 }
 
 class CardWithSideImage extends StatelessWidget {
-  final Image image;
+  final Widget image;
   final Widget content;
 
   const CardWithSideImage(

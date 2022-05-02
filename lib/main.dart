@@ -1,9 +1,28 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:cocktails_app/data/local/database.dart';
 import 'package:cocktails_app/router/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-void main() => runApp(ProviderScope(child: AppWidget()));
+void main() async {
+  runApp(
+    const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      ),
+    ),
+  );
+  final db = await initDb();
+  runApp(ProviderScope(
+    child: AppWidget(),
+    overrides: [
+      databaseProvider.overrideWithValue(db),
+    ],
+  ));
+}
 
 class AppWidget extends StatelessWidget {
   AppWidget({Key? key}) : super(key: key);
@@ -38,11 +57,12 @@ class MainPage extends StatelessWidget {
         currentIndex: tabsRouter.activeIndex,
         onTap: tabsRouter.setActiveIndex,
       ),
-      appBarBuilder: (_, tabRouter) => AppBar(
-        centerTitle: true,
-        title: const Text('CocktailsDB'),
-        leading: const AutoBackButton(),
-      ),
+      // appBarBuilder: (_, tabRouter) => AppBar(
+      //   centerTitle: true,
+      //
+      //   title: const Text('CocktailsDB'),
+      //   leading: const AutoBackButton(),
+      // ),
     );
   }
 }
