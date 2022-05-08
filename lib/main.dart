@@ -44,25 +44,17 @@ class MainPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AutoTabsScaffold(
-      routes: const [HomeRouter(), FavoritesRouter(), RandomRouter()],
+      routes: const [HomeRouter(), FavoritesRouter()],
       bottomNavigationBuilder: (_, tabsRouter) => BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(
               icon: Icon(Icons.local_drink), label: 'Напитки'),
           BottomNavigationBarItem(
               icon: Icon(Icons.favorite), label: 'Избранное'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.question_mark), label: 'Случайный')
         ],
         currentIndex: tabsRouter.activeIndex,
         onTap: tabsRouter.setActiveIndex,
       ),
-      // appBarBuilder: (_, tabRouter) => AppBar(
-      //   centerTitle: true,
-      //
-      //   title: const Text('CocktailsDB'),
-      //   leading: const AutoBackButton(),
-      // ),
     );
   }
 }

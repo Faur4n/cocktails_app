@@ -1,4 +1,5 @@
 import 'package:cocktails_app/data/models/drinks_response.dart';
+import 'package:cocktails_app/data/models/filter_response.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
@@ -12,8 +13,7 @@ final dioProvider = Provider((ref) {
       responseHeader: false,
       error: true,
       compact: true,
-      maxWidth: 90
-  ));
+      maxWidth: 90));
   return dio;
 });
 
@@ -31,10 +31,31 @@ class CocktailsApi {
     CancelToken? cancelToken,
   }) async {
     final response = await _get('search.php',
-        cancelToken: cancelToken, queryParameters: {'f': 'a'}
-    );
+        cancelToken: cancelToken, queryParameters: {'f': 'a'});
 
     return DrinksResponse.fromJson(response.data!);
+  }
+
+  Future<DrinksResponse> fetchCocktailsById(
+      String id, {
+        CancelToken? cancelToken,
+      }) async {
+    final response = await _get('lookup.php',
+        cancelToken: cancelToken, queryParameters: {'i': id});
+    return DrinksResponse.fromJson(response.data!);
+  }
+
+
+  Future<FilterResponse> fetchDrinksByFilter({
+    String? category,
+    String? ingredient,
+    CancelToken? cancelToken,
+  }) async {
+    final response = await _get('filter.php',
+        cancelToken: cancelToken,
+        queryParameters: {'c': category,'i': ingredient});
+
+    return FilterResponse.fromJson(response.data!);
   }
 
   Future<Response<Map<String, dynamic>>> _get(
@@ -42,7 +63,8 @@ class CocktailsApi {
     Map<String, Object?>? queryParameters,
     CancelToken? cancelToken,
   }) async {
-    final response = await _read(dioProvider).get<Map<String, Object?>>(apiUrl + path,
+    final response = await _read(dioProvider).get<Map<String, Object?>>(
+        apiUrl + path,
         cancelToken: cancelToken,
         queryParameters: <String, Object?>{...?queryParameters});
     return response;

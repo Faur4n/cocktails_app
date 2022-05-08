@@ -4,7 +4,6 @@ import 'package:flutter/cupertino.dart';
 import '../pages/drinks/drink_detail_page.dart';
 import '../pages/favorites_page.dart';
 import '../main.dart';
-import '../pages/random_page.dart';
 
 part 'app_router.gr.dart';
 
@@ -27,14 +26,7 @@ part 'app_router.gr.dart';
         page: EmptyRouterPage,
         children: [
           AutoRoute(path: '', page: FavoritesPage),
-        ],
-      ),
-      AutoRoute(
-        path: 'random',
-        name: 'RandomRouter',
-        page: EmptyRouterPage,
-        children: [
-          AutoRoute(path: '', page: RandomPage),
+          AutoRoute(path: ':drinkId', page: DrinksDetailsPage),
         ],
       ),
     ]),

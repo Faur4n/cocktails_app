@@ -1,3 +1,8 @@
+import 'dart:async';
+
+import 'package:cocktails_app/data/network/cocktails_api.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sembast/sembast.dart';
 import 'package:sembast/sembast_io.dart';
@@ -22,6 +27,8 @@ abstract class DrinkRepository {
 
   Stream<List<Drink>> getAllDrinks();
 
+  Stream<List<Drink>> getAllFavoriteDrinks();
+
   Stream<Drink?> getDrink(String id);
 
   Future<void> setIsFavorite(String drinkId, bool isFavorite);
@@ -29,22 +36,41 @@ abstract class DrinkRepository {
 
 final drinkRepositoryProvider = Provider<DrinkRepository>((ref) {
   final db = ref.watch(databaseProvider);
-  final repo = SembastDrinkRepository(db);
+  final api = ref.watch(apiProvider);
+  final repo = SembastDrinkRepository(api, db);
   return repo;
 });
 
 class SembastDrinkRepository extends DrinkRepository {
-  SembastDrinkRepository(this._db);
+  SembastDrinkRepository(this._api, this._db);
 
+  final CocktailsApi _api;
   final Database _db;
   final StoreRef<String, Map<String, dynamic>> _store =
       stringMapStoreFactory.store("drink_store");
 
   @override
   Stream<List<Drink>> getAllDrinks() {
-    return _store.query().onSnapshots(_db).map((snapshot) => snapshot
-        .map((drink) => Drink.fromJson(drink.value).copyWith(id: drink.key))
-        .toList(growable: false));
+    final cancelToken = CancelToken();
+
+    final controller = StreamController<List<Drink>>(
+        onCancel: cancelToken.cancel,
+        onResume: () async {
+          final response =
+              await _api.fetchCocktailsByLetter('a', cancelToken: cancelToken);
+          await insertAllDrinks(response.drinks);
+        });
+    _store
+        .query()
+        .onSnapshots(_db)
+        .map((snapshot) => snapshot
+            .map((drink) => Drink.fromJson(drink.value).copyWith(id: drink.key))
+            .toList(growable: false))
+        .forEach((element) {
+      controller.add(element);
+    });
+
+    return controller.stream;
   }
 
   @override
@@ -70,8 +96,28 @@ class SembastDrinkRepository extends DrinkRepository {
   @override
   Stream<Drink?> getDrink(String id) {
     final finder = Finder(filter: Filter.equals('idDrink', id));
-    return _store.query(finder: finder).onSnapshot(_db).map((drink) => drink != null
-        ? Drink.fromJson(drink.value).copyWith(id: drink.key)
-        : null);
+    return _store.query(finder: finder).onSnapshot(_db).asyncMap((drink) async {
+      if (drink != null) {
+        return Drink.fromJson(drink.value).copyWith(id: drink.key);
+      } else {
+        final response = await _api.fetchCocktailsById(id);
+        final drinks = response.drinks;
+        if (drinks.isNotEmpty) {
+          insertAllDrinks(drinks);
+        }
+      }
+      return null;
+    });
+  }
+
+  @override
+  Stream<List<Drink>> getAllFavoriteDrinks() {
+    final finder = Finder(filter: Filter.equals('is_favorite', true));
+    return _store
+        .query(finder: finder)
+        .onSnapshots(_db)
+        .map((snapshot) => snapshot
+        .map((drink) => Drink.fromJson(drink.value).copyWith(id: drink.key))
+        .toList(growable: false));
   }
 }

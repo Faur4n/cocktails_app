@@ -1,10 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cocktails_app/data/local/database.dart';
-import 'package:cocktails_app/data/network/cocktails_api.dart';
 import 'package:cocktails_app/router/app_router.dart';
-import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/drink.dart';
@@ -12,17 +9,6 @@ import '../../data/models/drink.dart';
 final drinksByLetter =
     StreamProvider.autoDispose.family<List<Drink>, String>((ref, letter) {
   final repo = ref.watch(drinkRepositoryProvider);
-  try {
-    final cancelToken = CancelToken();
-    ref.onDispose(cancelToken.cancel);
-    final api = ref.watch(apiProvider);
-    final response = api.fetchCocktailsByLetter('a', cancelToken: cancelToken);
-    response.then((value) => repo.insertAllDrinks(value.drinks));
-  } catch (e) {
-    if (kDebugMode) {
-      print(e);
-    }
-  }
   return repo.getAllDrinks();
 });
 
@@ -35,7 +21,7 @@ class DrinksPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('Drinks'),
+        title: const Text('Напитки'),
         leading: const AutoBackButton(),
       ),
       body: Container(
